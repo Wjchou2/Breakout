@@ -1,9 +1,9 @@
 # Breakout Game
 
-## to run, download the zip file, open in a code editor
+## How to run
 
-## for windows double click run.bat
+-download the zip file, open in a code editor
+-for windows double click run.bat
+-for mac and linux, run chmod +x run.sh and ./run.sh
 
-## for max and linux, run chmod +x run.sh and ./run.sh
-
-Try to survive as long as possibel and destroy all the bricks!
+Try to survive as long as possible and destroy all the bricks!
