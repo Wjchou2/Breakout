@@ -128,7 +128,7 @@ public class Breakout extends GraphicsProgram {
     }
 
     public void resetBall() {
-        if (livesLeft > 0) {
+        if (livesLeft > 0 && !gameHasEnded) {
             remove(ball);
             countdown();
             setUpBall();
@@ -277,7 +277,6 @@ public class Breakout extends GraphicsProgram {
         if (collidePart == null) {
             return;
         } else if (collidePart == paddle) {
-            // ball.move(velocityX, -velocityY);
             velocityY = -velocityY;
         } else if (collidePart.getColor() != Color.black) {
             velocityY = -velocityY;
