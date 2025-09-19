@@ -6,6 +6,8 @@
 
 -for windows double click run.bat
 
--for mac and linux, run <b>chmod +x run.sh </b> and <b>./run.sh </b>
+-for mac and linux, run <b>chmod +x run.sh
+
+./run.sh </b>
 
 Try to survive as long as possible and destroy all the bricks!
