@@ -50,12 +50,18 @@ public class Breakout extends GraphicsProgram {
      */
     GRect paddle;
     GOval ball;
+
     int score = 0;
     double velocityX;
     double velocityY;
     int livesLeft = NUM_LIVES;
     int bricksLeft = NBRICKS_PER_ROW * NBRICK_ROWS;
     boolean gameHasEnded = false;
+
+    GLabel normalMode;
+    GLabel frenzyMode;
+    GRect normalModeBG;
+    GRect frenzyModeBG;
 
     Color[] brickColors = { Color.red, Color.orange, Color.yellow, Color.green, Color.cyan };
 
@@ -66,39 +72,57 @@ public class Breakout extends GraphicsProgram {
     public void run() {
         setSize(APPLICATION_WIDTH, APPLICATION_HEIGHT);
         setupBricks();
-
-        // showStartMenu();
-        // while (!hasStartedGame){}
-        hasStartedGame = true;
-        addMouseListeners(); // register mouse events
+        addMouseListeners();
+        showStartMenu();
+        hasStartedGame = false;
+        while (!hasStartedGame) {
+            pause(10);
+        }
 
         setupPaddle();
         drawHearts();
+        remove(normalMode);
+        remove(normalModeBG);
+        remove(frenzyMode);
+        remove(frenzyModeBG);
+
         countdown();
+
         setUpBall();
+
         animationLoop();
 
     }
 
-    GRect normalMode;
-
     public void drawButtonWithBg(String text, int x, int y) {
-        GLabel normalMode = new GLabel(text);
+        normalMode = new GLabel(text);
         normalMode.setFont("SansSerif-30");
         normalMode.setColor(Color.white);
         normalMode.setLocation(x - normalMode.getWidth() / 2, y - normalMode.getHeight() / 2);
 
-        GRect background = new GRect(0, 0, normalMode.getWidth() * 5 / 4, normalMode.getHeight() * 3 / 2);
-        background.setLocation(x - normalMode.getWidth() / 2, y - background.getHeight() / 2);
-        background.setFilled(true);
-        add(background);
+        normalModeBG = new GRect(0, 0, normalMode.getWidth() * 5 / 4, normalMode.getHeight() * 3 / 2);
+        normalModeBG.setLocation(x - normalModeBG.getWidth() / 2, y - normalModeBG.getHeight());
+        normalModeBG.setFilled(true);
+        add(normalModeBG);
         add(normalMode);
+    }
+
+    public void drawButtonWithBgfrenzy(String text, int x, int y) {
+        frenzyMode = new GLabel(text);
+        frenzyMode.setFont("SansSerif-30");
+        frenzyMode.setColor(Color.white);
+        frenzyMode.setLocation(x - frenzyMode.getWidth() / 2, y - frenzyMode.getHeight() / 2);
+
+        frenzyModeBG = new GRect(0, 0, frenzyMode.getWidth() * 5 / 4, frenzyMode.getHeight() * 3 / 2);
+        frenzyModeBG.setLocation(x - frenzyModeBG.getWidth() / 2, y - frenzyModeBG.getHeight());
+        frenzyModeBG.setFilled(true);
+        add(frenzyModeBG);
+        add(frenzyMode);
     }
 
     public void showStartMenu() {
         drawButtonWithBg("Normal Mode", getWidth() / 2, getHeight() / 2);
-        drawButtonWithBg("Fenzy Mode", getWidth() / 2, getHeight() / 2 + 100);
-
+        drawButtonWithBgfrenzy("Crazy Mode", getWidth() / 2, getHeight() / 2 + 100);
     }
 
     public void drawHearts() {
@@ -107,6 +131,19 @@ public class Breakout extends GraphicsProgram {
             drawHeart(hearts[i]);
         }
 
+    }
+
+    int mode = 0;
+
+    public void mouseClicked(MouseEvent event) {
+        GObject elm = getElementAt(event.getX(), event.getY());
+        if (elm == normalModeBG || elm == normalMode) {
+            mode = 1;
+            hasStartedGame = true;
+        } else if (elm == frenzyMode || elm == frenzyModeBG) {
+            mode = 5;
+            hasStartedGame = true;
+        }
     }
 
     public void drawHeart(GPolygon heart) {
@@ -179,27 +216,28 @@ public class Breakout extends GraphicsProgram {
     }
 
     public void setupPaddle() {
-        paddle = new GRect(0, getHeight() - PADDLE_Y_OFFSET, PADDLE_WIDTH, PADDLE_HEIGHT);
+        paddle = new GRect(0, getHeight() - PADDLE_Y_OFFSET, PADDLE_WIDTH * (mode == 1 ? 1 : 3), PADDLE_HEIGHT);
         paddle.setFilled(true);
         add(paddle);
     }
 
     public void mouseMoved(MouseEvent event) {
-        // if (paddle != null) {
-        if (event.getX() >= 0 && event.getX() + PADDLE_WIDTH - PADDLE_WIDTH / 2 <= getWidth()) {
+        if (paddle != null) {
 
-            paddle.setLocation(event.getX() - PADDLE_WIDTH / 2, getHeight() - PADDLE_Y_OFFSET);
+            if (event.getX() >= paddle.getWidth() / 2 && event.getX() + paddle.getWidth() / 2 <= getWidth()) {
+                paddle.setLocation((event.getX() - paddle.getWidth() / 2), getHeight() - PADDLE_Y_OFFSET);
+            }
         }
-        // }
     }
 
     public void setUpBall() {
-        ball = new GOval(getWidth() / 2 - BALL_RADIUS / 2, getHeight() / 3 - BALL_RADIUS / 2, BALL_RADIUS * 2,
-                BALL_RADIUS * 2);
+        ball = new GOval(getWidth() / 2 - BALL_RADIUS / 2, getHeight() / 3 - BALL_RADIUS / 2,
+                BALL_RADIUS * 2 * mode,
+                BALL_RADIUS * 2 * mode);
         ball.setFilled(true);
         add(ball);
-        velocityY = 2;
-        velocityX = 1 + Math.random() * 1;
+        velocityY = 2 * mode / 2;
+        velocityX = 1 + Math.random() * 1 * mode;
 
         if (Math.random() > 0.5) {
             velocityX = -velocityX;
@@ -261,12 +299,12 @@ public class Breakout extends GraphicsProgram {
         collidePart = null;
         if (getElementAt(ball.getX(), ball.getY()) != null) {
             collidePart = getElementAt(ball.getX(), ball.getY());
-        } else if (getElementAt(ball.getX() + BALL_RADIUS * 2, ball.getY()) != null) {
-            collidePart = getElementAt(ball.getX() + BALL_RADIUS * 2, ball.getY());
-        } else if (getElementAt(ball.getX() + BALL_RADIUS * 2, ball.getY() + BALL_RADIUS * 2) != null) {
-            collidePart = getElementAt(ball.getX() + BALL_RADIUS * 2, ball.getY() + BALL_RADIUS * 2);
-        } else if (getElementAt(ball.getX(), ball.getY() + BALL_RADIUS * 2) != null) {
-            collidePart = getElementAt(ball.getX(), ball.getY() + BALL_RADIUS * 2);
+        } else if (getElementAt(ball.getX() + BALL_RADIUS * 2 * mode, ball.getY()) != null) {
+            collidePart = getElementAt(ball.getX() + BALL_RADIUS * 2 * mode, ball.getY());
+        } else if (getElementAt(ball.getX() + BALL_RADIUS * 2 * mode, ball.getY() + BALL_RADIUS * 2 * mode) != null) {
+            collidePart = getElementAt(ball.getX() + BALL_RADIUS * 2 * mode, ball.getY() + BALL_RADIUS * 2 * mode);
+        } else if (getElementAt(ball.getX(), ball.getY() + BALL_RADIUS * 2 * mode) != null) {
+            collidePart = getElementAt(ball.getX(), ball.getY() + BALL_RADIUS * 2 * mode);
         }
 
     }
@@ -279,12 +317,10 @@ public class Breakout extends GraphicsProgram {
         } else if (collidePart == paddle) {
             velocityY = -velocityY;
         } else if (collidePart.getColor() != Color.black) {
-            velocityY = -velocityY;
             score += 10;
             remove(collidePart);
             bricksLeft -= 1;
             if (bricksLeft <= 0) {
-
                 for (int i = 0; i < 3; i++) {
                     ball.setColor(Color.green);
                     pause(100);
@@ -293,6 +329,10 @@ public class Breakout extends GraphicsProgram {
                 }
                 showWinScreen();
             }
+            if (mode <= 1) {
+                velocityY = -velocityY;
+            }
+
         }
     }
 
