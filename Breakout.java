@@ -71,16 +71,20 @@ public class Breakout extends GraphicsProgram {
     /** Runs the Breakout program. */
     public void run() {
         setSize(APPLICATION_WIDTH, APPLICATION_HEIGHT);
-        setupBricks();
+
         addMouseListeners();
+        showStartingBrickBackground();
         showStartMenu();
+
         hasStartedGame = false;
         while (!hasStartedGame) {
             pause(10);
         }
+        removeAll();
+        setupBricks();
 
-        setupPaddle();
         drawHearts();
+        setupPaddle();
         remove(normalMode);
         remove(normalModeBG);
         remove(frenzyMode);
@@ -92,6 +96,19 @@ public class Breakout extends GraphicsProgram {
 
         animationLoop();
 
+    }
+
+    public void showStartingBrickBackground() {
+        for (int i = 0; i < NBRICK_ROWS * 10; i++) {
+            for (int j = 0; j < NBRICKS_PER_ROW; j++) {
+                GRect brick = new GRect((BRICK_WIDTH + BRICK_SEP) * j, (BRICK_HEIGHT + BRICK_SEP) * i,
+                        BRICK_WIDTH, BRICK_HEIGHT);
+                brick.setFilled(true);
+                brick.setColor(brickColors[i % 5]);
+                add(brick);
+
+            }
+        }
     }
 
     public void drawButtonWithBg(String text, int x, int y) {
@@ -120,9 +137,19 @@ public class Breakout extends GraphicsProgram {
         add(frenzyMode);
     }
 
+    public void drawBreakoutLabel(String text, int x, int y) {
+        GLabel BreakoutLabel = new GLabel(text);
+        BreakoutLabel.setFont("SansSerif-70");
+        BreakoutLabel.setColor(Color.black);
+        BreakoutLabel.setLocation(x - BreakoutLabel.getWidth() / 2, y);
+        add(BreakoutLabel);
+    }
+
     public void showStartMenu() {
         drawButtonWithBg("Normal Mode", getWidth() / 2, getHeight() / 2);
         drawButtonWithBgfrenzy("Crazy Mode", getWidth() / 2, getHeight() / 2 + 100);
+        drawBreakoutLabel("Breakout", getWidth() / 2, 100);
+
     }
 
     public void drawHearts() {
@@ -236,7 +263,7 @@ public class Breakout extends GraphicsProgram {
                 BALL_RADIUS * 2 * mode);
         ball.setFilled(true);
         add(ball);
-        velocityY = 2 * mode / 2;
+        velocityY = 2 * mode - 1 / 2;
         velocityX = 1 + Math.random() * 1 * mode;
 
         if (Math.random() > 0.5) {
