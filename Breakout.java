@@ -11,8 +11,7 @@ public class Breakout extends GraphicsProgram {
 
     /** Dimensions of game board in pixels (usually the same) */
     private static final int WIDTH = APPLICATION_WIDTH;
-    // private static final int HEIGHT = APPLICATION_HEIGHT;
-
+    private static final int HEIGHT = APPLICATION_HEIGHT;
     /** Dimensions of the paddle */
     private static final int PADDLE_WIDTH = 60;
     private static final int PADDLE_HEIGHT = 10;
@@ -43,17 +42,8 @@ public class Breakout extends GraphicsProgram {
 
     /** Number of "lives" (balls) before the player loses */
     private static final int NUM_LIVES = 3;
-
     double velocityX;
     double velocityY;
-
-    int mode = 0;
-    int score = 0;
-    int livesLeft = NUM_LIVES;
-    int bricksLeft = NBRICKS_PER_ROW * NBRICK_ROWS;
-
-    boolean gameHasEnded = false;
-    boolean hasStartedGame = false;
 
     GRect paddle;
     GOval ball;
@@ -63,29 +53,73 @@ public class Breakout extends GraphicsProgram {
     GRect frenzyModeBG;
     GObject collidePart;
 
+    int mode;
+    int score;
+
+    int livesLeft;
+    int bricksLeft;
+
+    boolean gameHasEnded;
+    boolean hasStartedGame;
+    boolean playAgain = false;
+    GLabel playAgainLabel;
+    GRect playAgainLabelBG;
     Color[] brickColors = { Color.red, Color.orange, Color.yellow, Color.green, Color.cyan };
     GPolygon[] hearts = { new GPolygon(), new GPolygon(), new GPolygon() };
+
+    public void initVariable() {
+
+    }
 
     public void run() {
         setSize(APPLICATION_WIDTH, APPLICATION_HEIGHT);
         addMouseListeners();
         // Show Menu
-        showStartMenu();
-        // Wait for player to click a gamemode
-        while (!hasStartedGame) {
-            pause(10);
+        while (true) {
+            mode = 0;
+            score = 0;
+
+            livesLeft = NUM_LIVES;
+            bricksLeft = NBRICKS_PER_ROW * NBRICK_ROWS;
+
+            gameHasEnded = false;
+            hasStartedGame = false;
+            playAgain = false;
+            showStartMenu();
+            // Wait for player to click a gamemode
+            while (!hasStartedGame) {
+                pause(10);
+            }
+            removeAll();
+            // Game Setup
+            setupBricks();
+            drawHearts();
+            setupPaddle();
+            // Playing Start
+            countdown();
+            setUpBall();
+            animationLoop();
+
+            createPlayAgainButton(getWidth() / 2, getHeight() / 2 + 100);
+            playAgain = false;
+            while (!playAgain) {
+                pause(10);
+            }
+            removeAll();
         }
-        removeAll();
-        // Game Setup
-        setupBricks();
-        drawHearts();
-        setupPaddle();
+    }
 
-        // Playing Start
-        countdown();
-        setUpBall();
-        animationLoop();
+    public void createPlayAgainButton(int x, int y) {
+        playAgainLabel = new GLabel("Play Again!");
+        playAgainLabel.setFont("SansSerif-30");
+        playAgainLabel.setColor(Color.white);
+        playAgainLabel.setLocation(x - playAgainLabel.getWidth() / 2, y - playAgainLabel.getHeight() / 2);
 
+        playAgainLabelBG = new GRect(0, 0, playAgainLabel.getWidth() * 5 / 4, playAgainLabel.getHeight() * 3 / 2);
+        playAgainLabelBG.setLocation(x - playAgainLabelBG.getWidth() / 2, y - playAgainLabelBG.getHeight());
+        playAgainLabelBG.setFilled(true);
+        add(playAgainLabelBG);
+        add(playAgainLabel);
     }
 
     public void showStartingBrickBackground() {
@@ -101,6 +135,7 @@ public class Breakout extends GraphicsProgram {
     }
 
     public void showStartMenu() {
+        setBackground(Color.white);
         showStartingBrickBackground();
         drawButtonWithBg("Normal Mode", getWidth() / 2, getHeight() / 2);
         drawButtonWithBgfrenzy("Crazy Mode", getWidth() / 2, getHeight() / 2 + 100);
@@ -162,7 +197,6 @@ public class Breakout extends GraphicsProgram {
         heart.setFilled(true);
         heart.setFillColor(Color.red);
         heart.setColor(Color.black);
-        // heart.setLineWidth(8);
         add(heart);
     }
 
@@ -221,6 +255,8 @@ public class Breakout extends GraphicsProgram {
         } else if (elm == frenzyMode || elm == frenzyModeBG) {
 
             frenzyModeBG.setColor(new Color(55, 61, 60));
+        } else if (playAgainLabelBG != null && (elm == playAgainLabel || elm == playAgainLabelBG)) {
+            playAgainLabelBG.setColor(new Color(55, 61, 60));
         } else {
             frenzyModeBG.setColor(Color.black);
             normalModeBG.setColor(Color.black);
@@ -241,7 +277,10 @@ public class Breakout extends GraphicsProgram {
         } else if (elm == frenzyMode || elm == frenzyModeBG) {
             mode = 5;
             hasStartedGame = true;
+        } else if (elm == playAgainLabel || elm == playAgainLabelBG) {
+            playAgain = true;
         }
+
     }
 
     public void setUpBall() {
@@ -347,7 +386,6 @@ public class Breakout extends GraphicsProgram {
             if (mode <= 1) {
                 velocityY = -velocityY;
             }
-
         }
     }
 
@@ -361,7 +399,7 @@ public class Breakout extends GraphicsProgram {
     }
 
     public void animationLoop() {
-        while (true) {
+        while (!gameHasEnded) {
             if (mode > 1) {
                 Color ranColor = new Color(
                         (int) (Math.random() * 256),
