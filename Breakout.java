@@ -67,10 +67,6 @@ public class Breakout extends GraphicsProgram {
     Color[] brickColors = { Color.red, Color.orange, Color.yellow, Color.green, Color.cyan };
     GPolygon[] hearts = { new GPolygon(), new GPolygon(), new GPolygon() };
 
-    public void initVariable() {
-
-    }
-
     public void run() {
         setSize(APPLICATION_WIDTH, APPLICATION_HEIGHT);
         addMouseListeners();
@@ -78,10 +74,8 @@ public class Breakout extends GraphicsProgram {
         while (true) {
             mode = 0;
             score = 0;
-
             livesLeft = NUM_LIVES;
             bricksLeft = NBRICKS_PER_ROW * NBRICK_ROWS;
-
             gameHasEnded = false;
             hasStartedGame = false;
             playAgain = false;
@@ -99,8 +93,7 @@ public class Breakout extends GraphicsProgram {
             countdown();
             setUpBall();
             animationLoop();
-
-            createPlayAgainButton(getWidth() / 2, getHeight() / 2 + 100);
+            createPlayAgainButton(getWidth() / 2, getHeight() / 2 + 150);
             playAgain = false;
             while (!playAgain) {
                 pause(10);
@@ -260,6 +253,9 @@ public class Breakout extends GraphicsProgram {
         } else {
             frenzyModeBG.setColor(Color.black);
             normalModeBG.setColor(Color.black);
+            if (playAgainLabelBG != null) {
+                playAgainLabelBG.setColor(Color.black);
+            }
         }
 
         if (paddle != null) {
