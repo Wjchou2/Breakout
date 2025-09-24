@@ -1,6 +1,9 @@
 
 import acm.graphics.*;
 import acm.program.*;
+import acm.util.MediaTools;
+
+import java.applet.AudioClip;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -63,6 +66,7 @@ public class Breakout extends GraphicsProgram {
     boolean hasStartedGame;
     boolean playAgain = false;
     GLabel playAgainLabel;
+    GLabel scoreLabel;
     GRect playAgainLabelBG;
     Color[] brickColors = { Color.red, Color.orange, Color.yellow, Color.green, Color.cyan };
     GPolygon[] hearts = { new GPolygon(), new GPolygon(), new GPolygon() };
@@ -79,27 +83,32 @@ public class Breakout extends GraphicsProgram {
             gameHasEnded = false;
             hasStartedGame = false;
             playAgain = false;
+
             showStartMenu();
             // Wait for player to click a gamemode
             while (!hasStartedGame) {
                 pause(10);
             }
             removeAll();
-            // Game Setup
-            setupBricks();
-            drawHearts();
-            setupPaddle();
-            // Playing Start
-            countdown();
-            setUpBall();
+            setUpNewRound();
             animationLoop();
             createPlayAgainButton(getWidth() / 2, getHeight() / 2 + 150);
-            playAgain = false;
+            // Wait For play again to be clicked
             while (!playAgain) {
                 pause(10);
             }
             removeAll();
         }
+
+    }
+
+    public void setUpNewRound() {
+        setupBricks();
+        drawHearts();
+        setupPaddle();
+        createScoreLabel(getWidth() / 2 - 100, 80);
+        countdown();
+        setUpBall();
     }
 
     public void createPlayAgainButton(int x, int y) {
@@ -113,6 +122,19 @@ public class Breakout extends GraphicsProgram {
         playAgainLabelBG.setFilled(true);
         add(playAgainLabelBG);
         add(playAgainLabel);
+    }
+
+    public void createScoreLabel(int x, int y) {
+        scoreLabel = new GLabel("0");
+        scoreLabel.setFont("SansSerif-50");
+        scoreLabel.setColor(Color.black);
+        scoreLabel.setLocation(x - scoreLabel.getWidth() / 2, y - scoreLabel.getHeight() / 2);
+        add(scoreLabel);
+    }
+
+    public void updateScoreLabel(int x, int y) {
+        scoreLabel.setLabel("" + score);
+        scoreLabel.setLocation(x - scoreLabel.getWidth() / 2, y - scoreLabel.getHeight() / 2);
     }
 
     public void showStartingBrickBackground() {
@@ -201,7 +223,7 @@ public class Breakout extends GraphicsProgram {
             GLabel stats = new GLabel("You lost :(");
             stats.setFont("SansSerif-30");
             stats.setLocation(getWidth() / 2 - stats.getWidth() / 2, getHeight() / 2 - stats.getHeight() / 2);
-            GLabel bricksDestroyedLabel = new GLabel("You destroyed " + (100 - bricksLeft) + " bricks!");
+            GLabel bricksDestroyedLabel = new GLabel("Your Score is " + score + "!");
             bricksDestroyedLabel.setFont("SansSerif-30");
             bricksDestroyedLabel.setLocation(getWidth() / 2 - bricksDestroyedLabel.getWidth() / 2,
                     getHeight() / 2 - bricksDestroyedLabel.getHeight() / 2 + 50);
@@ -243,9 +265,9 @@ public class Breakout extends GraphicsProgram {
     public void mouseMoved(MouseEvent event) {
         GObject elm = getElementAt(event.getX(), event.getY());
 
-        if (elm == normalModeBG || elm == normalMode) {
+        if (normalModeBG != null && elm == normalModeBG || elm == normalMode) {
             normalModeBG.setColor(new Color(55, 61, 60));
-        } else if (elm == frenzyMode || elm == frenzyModeBG) {
+        } else if (frenzyModeBG != null && elm == frenzyMode || elm == frenzyModeBG) {
 
             frenzyModeBG.setColor(new Color(55, 61, 60));
         } else if (playAgainLabelBG != null && (elm == playAgainLabel || elm == playAgainLabelBG)) {
@@ -292,31 +314,40 @@ public class Breakout extends GraphicsProgram {
         }
     }
 
+    public void ballHitBottom() {
+
+        velocityY = 0;
+        velocityX = 0;
+        livesLeft -= 1;
+        if (livesLeft >= 1) {
+            remove(hearts[livesLeft]);
+        }
+        for (int i = 0; i < 3; i++) {
+            ball.setColor(Color.red);
+            pause(100);
+            ball.setColor(Color.black);
+            pause(100);
+        }
+        resetBall();
+    }
+
     public void updateBall() {
+
         ball.move(velocityX, velocityY);
         if (ball.getY() + ball.getHeight() > getHeight()) {
-            velocityY = 0;
-            velocityX = 0;
-            livesLeft -= 1;
-            if (livesLeft >= 1) {
-                remove(hearts[livesLeft]);
-            }
-            for (int i = 0; i < 3; i++) {
-                ball.setColor(Color.red);
-                pause(100);
-                ball.setColor(Color.black);
-                pause(100);
-            }
-            resetBall();
+            ballHitBottom();
         }
         if (ball.getX() + ball.getWidth() > getWidth()) {
-            velocityX = -velocityX;
+            velocityX = -Math.abs(velocityX);
+            // velocityX = -velocityX;
         }
         if (ball.getY() < 0) {
-            velocityY = -velocityY;
+            velocityY = Math.abs(velocityY);
+
         }
         if (ball.getX() < 0) {
-            velocityX = -velocityX;
+            velocityX = Math.abs(velocityX);
+
         }
     }
 
@@ -370,9 +401,13 @@ public class Breakout extends GraphicsProgram {
         if (collidePart == null) {
             return;
         } else if (collidePart == paddle) {
-            velocityY = -velocityY;
+            velocityX = -1 * ((paddle.getX() + paddle.getWidth() / 2 - ball.getX() - ball.getWidth() / 2) / 20);
+
+            velocityY = -Math.abs(velocityY);
+
         } else if (collidePart.getColor() != Color.black) {
-            score += 10;
+            score += 100;
+            updateScoreLabel(getWidth() / 2 - 100, 80);
             remove(collidePart);
             bricksLeft -= 1;
             if (bricksLeft <= 0) {
