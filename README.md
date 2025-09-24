@@ -7,9 +7,12 @@
 
 -for windows double click run.bat
 
--for mac and linux, run <b>chmod +x run.sh
+-for mac and linux, run <b>
 
-./run.sh </b>
+chmod +x run.sh
+
+./run.sh
+</b>
 
 -make sure you have java installed
 
