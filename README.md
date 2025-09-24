@@ -2,7 +2,8 @@
 
 ## How to run
 
--download the zip file, open folder in a code editor
+-Download the zip file, open folder in a code editor
+<a>https://github.com/Wjchou2/Breakout/archive/refs/heads/main.zip</a>
 
 -for windows double click run.bat
 
