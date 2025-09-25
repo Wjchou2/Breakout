@@ -8,5 +8,5 @@ IF %ERRORLEVEL%==0 (
 )
 
 REM Run the program with native access enabled
-java --enable-native-access=ALL-UNNAMED -cp "lib/*;." acm.program.BreakoutMain
+java --enable-native-access=ALL-UNNAMED -cp "lib/*;." acm.program.Breakout
 pause
