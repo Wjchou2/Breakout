@@ -1,6 +1,6 @@
 @echo off
-REM Compile Breakout.java including ACM jar
-javac -cp ".;lib\acm.jar" Breakout.java
-REM Run the program
-java -cp ".;lib\acm.jar" Breakout
+REM Run Breakout from jar using the bundled JRE
+
+"%~dp0jre\bin\java.exe" -cp "%~dp0acm.jar;%~dp0Breakout.jar" Breakout
+
 pause
