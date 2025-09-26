@@ -1,3 +1,2 @@
 Main-Class: Breakout
 Class-Path: acm.jar
-
