@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Breakout Online</title>
+        <!-- CheerpJ runtime -->
+        <script src="https://cjrtnc.leaningtech.com/cheerpj.js"></script>
+    </head>
+    <body>
+        <h1>Play Breakout!</h1>
+        <p>If the game doesn’t load immediately, wait a few seconds.</p>
+
+        <script>
+            async function runGame() {
+                // Initialize CheerpJ
+                await cheerpjInit();
+                // Create a canvas to render the Java GUI
+                cheerpjCreateDisplay(800, 600); // width x height
+
+                // Run your Breakout jar
+                await cheerpjRunJar("Breakout.jar");
+            }
+
+            runGame();
+        </script>
+    </body>
+</html>
