@@ -13,15 +13,17 @@
 
         <script>
             async function runGame() {
-                // Initialize CheerpJ
+                // Wait for CheerpJ runtime to load
                 await cheerpjInit();
-                // Create a canvas to render the Java GUI
-                cheerpjCreateDisplay(800, 600); // width x height
 
-                // Run your Breakout jar
+                // Create display for Java GUI
+                cheerpjCreateDisplay(800, 600);
+
+                // Run your Breakout.jar
                 await cheerpjRunJar("Breakout.jar");
             }
 
+            // Start game
             runGame();
         </script>
     </body>
