@@ -1,2 +1,2 @@
-Main-Class: Breakout
+Main-Class: BreakoutCheerpJ
 Class-Path: acm.jar

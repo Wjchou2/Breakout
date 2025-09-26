@@ -4,7 +4,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Breakout Online</title>
-        <!-- CheerpJ runtime -->
         <script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
     </head>
     <body>
@@ -12,19 +11,11 @@
         <p>If the game doesn’t load immediately, wait a few seconds.</p>
 
         <script>
-            async function runGame() {
-                // Wait for CheerpJ runtime to load
+            (async function () {
                 await cheerpjInit();
-
-                // Create display for Java GUI
                 cheerpjCreateDisplay(800, 600);
-
-                // Run your Breakout.jar
-                await cheerpjRunJar("BreakoutFat.jar");
-            }
-
-            // Start game
-            runGame();
+                await cheerpjRunJar("Breakout.jar");
+            })();
         </script>
     </body>
 </html>
