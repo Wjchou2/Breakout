@@ -1,20 +1,10 @@
 # Breakout Game
 
-## How to run
+## How to Play
 
--Download the zip file, open folder in a code editor
-<a>https://github.com/Wjchou2/Breakout/archive/refs/heads/main.zip</a>
+Go to the github link:
 
--for windows double click run.bat
-
--for mac and linux, run <b>
-
-chmod +x run.sh
-
-./run.sh
-</b>
-
--make sure you have java installed
+<a></a>
 
 Try to survive as long as possible and destroy all the bricks!
 

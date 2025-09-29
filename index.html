@@ -1,21 +1,361 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Breakout Online</title>
-        <script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+        <title>Breakout Game</title>
+        <script src="https://cdn.jsdelivr.net/npm/p5@1.7.0/lib/p5.min.js"></script>
     </head>
     <body>
-        <h1>Play Breakout!</h1>
-        <p>If the game doesn’t load immediately, wait a few seconds.</p>
-
         <script>
-            (async function () {
-                await cheerpjInit();
-                cheerpjCreateDisplay(800, 600);
-                await cheerpjRunJar("Breakout.jar");
-            })();
+            let APPLICATION_WIDTH = 400;
+            let APPLICATION_HEIGHT = 600;
+
+            let PADDLE_WIDTH = 60;
+            let PADDLE_HEIGHT = 10;
+            let PADDLE_Y_OFFSET = 30;
+
+            let NBRICKS_PER_ROW = 10;
+            let NBRICK_ROWS = 10;
+            let BRICK_SEP = 4;
+            let BRICK_Y_OFFSET = 70;
+            let BALL_RADIUS = 10;
+            let NUM_LIVES = 3;
+
+            let bricks = [];
+            let brickColors = ["red", "orange", "yellow", "green", "cyan"];
+            let paddle;
+            let ball;
+            let velocityX, velocityY;
+            let livesLeft;
+            let score;
+            let bricksLeft;
+            let gameHasEnded = false;
+            let hasStartedGame = false;
+            let mode = 0;
+            let playAgainButton;
+
+            let normalModeButton, frenzyModeButton;
+
+            function setup() {
+                createCanvas(APPLICATION_WIDTH, APPLICATION_HEIGHT);
+                setupStartMenu();
+            }
+
+            function draw() {
+                background(200);
+
+                if (!hasStartedGame) {
+                    drawStartMenu();
+                    return;
+                }
+
+                drawBricks();
+                drawPaddle();
+                drawBall();
+                drawScore();
+                drawLives();
+
+                if (!gameHasEnded) {
+                    updateBall();
+                    checkCollisions();
+                }
+
+                if (playAgainButton) {
+                    fill(0);
+                    rect(
+                        playAgainButton.x,
+                        playAgainButton.y,
+                        playAgainButton.w,
+                        playAgainButton.h
+                    );
+                    fill(255);
+                    textSize(20);
+                    textAlign(CENTER, CENTER);
+                    text(
+                        "Play Again!",
+                        playAgainButton.x + playAgainButton.w / 2,
+                        playAgainButton.y + playAgainButton.h / 2
+                    );
+                }
+            }
+
+            function setupStartMenu() {
+                normalModeButton = {
+                    x: width / 2 - 80,
+                    y: height / 2 - 20,
+                    w: 160,
+                    h: 40,
+                    label: "Normal Mode",
+                };
+                frenzyModeButton = {
+                    x: width / 2 - 80,
+                    y: height / 2 + 40,
+                    w: 160,
+                    h: 40,
+                    label: "Crazy Mode",
+                };
+            }
+
+            function drawStartMenu() {
+                textAlign(CENTER, TOP);
+                textSize(50);
+                fill(0);
+                text("Breakout", width / 2, 50);
+
+                fill(0);
+                rect(
+                    normalModeButton.x,
+                    normalModeButton.y,
+                    normalModeButton.w,
+                    normalModeButton.h
+                );
+                rect(
+                    frenzyModeButton.x,
+                    frenzyModeButton.y,
+                    frenzyModeButton.w,
+                    frenzyModeButton.h
+                );
+
+                fill(255);
+                textSize(20);
+                text(
+                    normalModeButton.label,
+                    normalModeButton.x + normalModeButton.w / 2,
+                    normalModeButton.y + normalModeButton.h / 2
+                );
+                text(
+                    frenzyModeButton.label,
+                    frenzyModeButton.x + frenzyModeButton.w / 2,
+                    frenzyModeButton.y + frenzyModeButton.h / 2
+                );
+            }
+
+            function mousePressed() {
+                if (!hasStartedGame) {
+                    if (
+                        mouseX > normalModeButton.x &&
+                        mouseX < normalModeButton.x + normalModeButton.w &&
+                        mouseY > normalModeButton.y &&
+                        mouseY < normalModeButton.y + normalModeButton.h
+                    ) {
+                        mode = 1;
+                        startGame();
+                    } else if (
+                        mouseX > frenzyModeButton.x &&
+                        mouseX < frenzyModeButton.x + frenzyModeButton.w &&
+                        mouseY > frenzyModeButton.y &&
+                        mouseY < frenzyModeButton.y + frenzyModeButton.h
+                    ) {
+                        mode = 5;
+                        startGame();
+                    }
+                } else if (playAgainButton) {
+                    if (
+                        mouseX > playAgainButton.x &&
+                        mouseX < playAgainButton.x + playAgainButton.w &&
+                        mouseY > playAgainButton.y &&
+                        mouseY < playAgainButton.y + playAgainButton.h
+                    ) {
+                        resetGame();
+                    }
+                }
+            }
+
+            function startGame() {
+                hasStartedGame = true;
+                livesLeft = NUM_LIVES;
+                score = 0;
+                bricksLeft = NBRICKS_PER_ROW * NBRICK_ROWS;
+                gameHasEnded = false;
+                playAgainButton = null;
+                setupBricks();
+                setupPaddle();
+                setupBall();
+            }
+
+            function setupPaddle() {
+                paddle = createVector(
+                    width / 2 - PADDLE_WIDTH / 2,
+                    height - PADDLE_Y_OFFSET
+                );
+            }
+
+            function drawPaddle() {
+                fill(0);
+                rect(
+                    paddle.x,
+                    paddle.y,
+                    PADDLE_WIDTH * (mode === 1 ? 1 : 3),
+                    PADDLE_HEIGHT
+                );
+            }
+
+            function mouseMoved() {
+                if (paddle) {
+                    let mx = constrain(
+                        mouseX - PADDLE_WIDTH / 2,
+                        0,
+                        width - PADDLE_WIDTH * (mode === 1 ? 1 : 3)
+                    );
+                    paddle.x = mx;
+                }
+            }
+
+            function setupBricks() {
+                bricks = [];
+                let brickWidth =
+                    (width - (NBRICKS_PER_ROW - 1) * BRICK_SEP) /
+                    NBRICKS_PER_ROW;
+                let brickHeight = 8;
+                noStroke();
+                for (let row = 0; row < NBRICK_ROWS; row++) {
+                    for (let col = 0; col < NBRICKS_PER_ROW; col++) {
+                        let brick = {
+                            x: col * (brickWidth + BRICK_SEP),
+                            y: row * (brickHeight + BRICK_SEP) + BRICK_Y_OFFSET,
+                            w: brickWidth,
+                            h: brickHeight,
+                            color: brickColors[Math.floor(row / 2)],
+                            destroyed: false,
+                        };
+                        bricks.push(brick);
+                    }
+                }
+            }
+
+            function drawBricks() {
+                for (let b of bricks) {
+                    if (!b.destroyed) {
+                        fill(b.color);
+                        rect(b.x, b.y, b.w, b.h);
+                    }
+                }
+            }
+
+            function setupBall() {
+                ball = createVector(width / 2, height / 2);
+                velocityY = 7 * (mode === 1 ? 1 : mode / 2 - 2);
+                velocityX = 1 + Math.random() * mode * 5;
+                if (Math.random() > 0.5) velocityX = -velocityX;
+            }
+
+            function drawBall() {
+                if (mode > 1)
+                    fill(color(random(255), random(255), random(255)));
+                else fill(0);
+                ellipse(
+                    ball.x,
+                    ball.y,
+                    BALL_RADIUS * 2 * mode,
+                    BALL_RADIUS * 2 * mode
+                );
+            }
+
+            function updateBall() {
+                ball.x += velocityX;
+                ball.y += velocityY;
+
+                if (ball.x + BALL_RADIUS > width || ball.x - BALL_RADIUS < 0)
+                    velocityX *= -1;
+                if (ball.y - BALL_RADIUS < 0) velocityY *= -1;
+
+                if (ball.y + BALL_RADIUS > height) {
+                    livesLeft--;
+                    if (livesLeft <= 0) {
+                        gameHasEnded = true;
+                        playAgainButton = {
+                            x: width / 2 - 60,
+                            y: height / 2,
+                            w: 120,
+                            h: 40,
+                        };
+                    } else {
+                        setupBall();
+                    }
+                }
+            }
+
+            function getCollision() {
+                let r = BALL_RADIUS * (mode === 1 ? 1 : mode);
+
+                let corners = [
+                    createVector(ball.x - r, ball.y - r),
+                    createVector(ball.x + r, ball.y - r),
+                    createVector(ball.x - r, ball.y + r),
+                    createVector(ball.x + r, ball.y + r),
+                ];
+
+                for (let c of corners) {
+                    if (
+                        c.x > paddle.x &&
+                        c.x < paddle.x + PADDLE_WIDTH * (mode === 1 ? 1 : 3) &&
+                        c.y > paddle.y &&
+                        c.y < paddle.y + PADDLE_HEIGHT
+                    ) {
+                        return "paddle";
+                    }
+
+                    for (let b of bricks) {
+                        if (
+                            !b.destroyed &&
+                            c.x > b.x &&
+                            c.x < b.x + b.w &&
+                            c.y > b.y &&
+                            c.y < b.y + b.h
+                        ) {
+                            return b;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            function checkCollisions() {
+                let collided = getCollision();
+                if (!collided) return;
+
+                if (collided === "paddle") {
+                    velocityY = -abs(velocityY);
+                    let offset = (ball.x - (paddle.x + PADDLE_WIDTH / 2)) / 7;
+                    velocityX = offset;
+                } else {
+                    collided.destroyed = true;
+                    if (mode < 2) {
+                        velocityY *= -1;
+                    }
+                    score += 100;
+                    bricksLeft--;
+                    if (bricksLeft <= 0) {
+                        gameHasEnded = true;
+                        playAgainButton = {
+                            x: width / 2 - 60,
+                            y: height / 2,
+                            w: 120,
+                            h: 40,
+                        };
+                    }
+                }
+            }
+
+            function drawScore() {
+                fill(0);
+                textSize(20);
+                textAlign(LEFT, TOP);
+                text("Score: " + score, 10, 10);
+            }
+
+            function drawLives() {
+                fill(255, 0, 0);
+                for (let i = 0; i < livesLeft; i++) {
+                    ellipse(width - 20 - i * 30, 20, 20, 20);
+                }
+            }
+
+            function resetGame() {
+                mode = 0;
+                hasStartedGame = false;
+                setupStartMenu();
+            }
         </script>
     </body>
 </html>
